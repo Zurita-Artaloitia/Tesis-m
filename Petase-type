@@ -1,0 +1,36 @@
+import pandas as pd
+
+# Se coloca el PATH en el cual están las secuencias en fasta
+file_path = 'expanded_sequences.csv'
+df = pd.read_csv(file_path)
+
+# Se define la función para clasificar las PETasas
+def classify_protein(row):
+    # Se lee y define el aminoácido en cada sitio
+    pos = {f"Position_{i}": row[f"Position_{i}"] for i in range(1, 12)}
+    
+    # Se usa el header para definir el origen de cada muestra, ya que fueron nombradas "Origen_id"
+    header_parts = row['Header'].split('_')
+    origin = header_parts[0] if header_parts[0] in ["Marref", "RefSoil", "LdBTM", "GAP38373"] else "Reference"
+    
+    # Se busca si tienen los puentes disulfuro en las posiciones 9 y 11
+    has_disulfide_1 = pos["Position_10"] == "C" and pos["Position_11"] == "C"
+    has_disulfide_2 = pos["Position_5"] == "C" and pos["Position_9"] == "C"
+    
+    # Se clasifican de acuerdo a la presencia de puentes disfulruo y de la serina en la posición 8
+    if has_disulfide_1 and has_disulfide_2:
+        classification = "Type IIb" if pos["Position_8"] == "S" else "Type IIa"
+    elif has_disulfide_1 and pos["Position_8"] != "S":
+        classification = "Type I"
+    else:
+        classification = "Unclassified"
+    
+    return pd.Series([origin, classification])
+
+# Se agregar columnas para clasificar los tipos de PETasas y su orígen.
+df_classified = df.copy()
+df_classified[['origin', 'Classification']] = df.apply(classify_protein, axis=1)
+
+# Se imprime el DF final
+df_classified.to_csv("classified_proteins.csv", index=False)
+print("Classification complete. Results saved to 'classified_proteins.csv'")
