@@ -1,4 +1,11 @@
 #!/bin/bash
+#Este script se debe correr dentro de un while read loop. La entrada tiene que ser una lista de GCAs.
+
+
+
+
+#Esto evitara que los comandos internos del script reinicien el STDIN del loop.
+exec </dev/null
 
 # Define el archivo temporal intermediario y el nombre de la secuencia para el output
 tmp_file="${1}.tmp"
